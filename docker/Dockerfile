@@ -36,7 +36,7 @@ RUN unzip netty-tcnative-boringssl-static.jar
 FROM ${source} as intermediate
 
 # runtime image https://console.cloud.google.com/gcr/images/distroless/global/java17
-FROM gcr.io/distroless/java17:nonroot
+FROM amazoncorretto:17-alpine
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -49,6 +49,7 @@ COPY --from=intermediate mockserver-netty-jar-with-dependencies.jar /
 COPY --from=intermediate META-INF/native/libnetty_tcnative_linux_x86_64.so /usr/lib/x86_64-linux-gnu/libnetty_tcnative_linux_x86_64.so
 
 # don't run MockServer as root
+RUN addgroup -S nonroot && adduser -S nonroot -G nonroot
 USER nonroot
 
 ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-cp", "/mockserver-netty-jar-with-dependencies.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
